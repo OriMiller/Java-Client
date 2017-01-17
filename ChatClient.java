@@ -27,7 +27,7 @@ import javax.swing.JScrollPane;
  * independent study of Computer Science
  *
  */
-public class ChatClient {
+public class Client {
 		private static String ip = "127.0.0.1";
 		private static File file;
 		private static int bytesRead;
@@ -48,7 +48,7 @@ public class ChatClient {
 		private final static String FILE_TO_RECEIVED_ORG = "/Users/orimiller/TEMP1/";
 		public static String FILE_TO_RECEIVED = "/Users/orimiller/TEMP1/";
 		
-	public ChatClient() throws UnknownHostException, IOException{
+	public Client() throws UnknownHostException, IOException{
 		
 		socket = new Socket(ip,2525);
 	    in = new DataInputStream(socket.getInputStream());
@@ -157,7 +157,7 @@ public class ChatClient {
 	}
 	public static void main(String[] args) throws Exception {
 		try{
-			ChatClient client = new ChatClient();
+			Client client = new Client();
 			
 			frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 			frame.setVisible(true);
