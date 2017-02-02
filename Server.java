@@ -18,11 +18,14 @@ import java.util.ArrayList;
  *
  */
 public class Server {
-		
-		public static ArrayList<Handler> connecties = new ArrayList<Handler>();
-		
-		public static void main(final String[] args) throws Exception {
-			System.out.println("Server is running");
+	public static String homeFile = ""; //Default directory
+	public static ArrayList<Handler> connecties = new ArrayList<Handler>();
+	public static void main(final String[] args) throws Exception {
+		System.out.println("Server is running");
+		System.out.println("Please type the home directory");
+		homeFile = System.console().readLine();
+		File temp = new File(homeFile);
+		if(temp.exists() && temp.isDirectory()){
 		 	ServerSocket server = new ServerSocket(2525); //Creation of ServerSocket
 		 	ThreadGroup group = new ThreadGroup("Connections"); //Creation of ThreadGroup that houses all of the individual Threads for each individual connection
 			try{
@@ -33,11 +36,14 @@ public class Server {
 			} finally {
 				server.close();
 			}
+		} else {
+			System.out.println("File " + temp.getAbsolutePath() + " does not exist or is not a directory");
+		}
 	}
 }
 class Handler extends Thread{
-	private static final String homeFile = "/Users/orimiller/TEMP/"; //Default directory
-	private static File file = new File(homeFile);
+	
+	private static File file = new File(Server.homeFile);
 	private static Socket socket; //Socket connected to client
 	private static DataInputStream in;
 	private static DataOutputStream out;
@@ -75,7 +81,7 @@ class Handler extends Thread{
         os.write(mybytearray,0,mybytearray.length);
         os.flush();
         System.out.println("Done.");
-        myFile = new File(homeFile);
+        myFile = new File(Server.homeFile);
         bis.close();
 	}
 	public void run(){
@@ -96,7 +102,7 @@ class Handler extends Thread{
 							System.out.println(file.getAbsolutePath());
 						}
 					} else if(firstLine.startsWith("HOME")){
-						file = new File(homeFile);
+						file = new File(Server.homeFile);
 					} else if(firstLine.startsWith("CLOSING")){
 						System.out.println("Closing: " + socket.toString());
 						socket.close();
