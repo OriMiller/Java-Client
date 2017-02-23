@@ -1,3 +1,10 @@
+/**
+ * @author orimiller
+ * This is a Java Client/Server Socket-based file download program 
+ * developed by Ori Miller for his 11th grade (Junior) year 
+ * independent study of Computer Science
+ *
+ */
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -12,32 +19,28 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+
 import java.net.ConnectException;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.time.Clock;
+import java.util.Date;
+import java.util.Timer;
 
 import javax.swing.JButton;
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-/**
- * @author orimiller
- * This is a Java Client/Server Socket-based file download program 
- * developed by Ori Miller for his 11th grade (Junior) year 
- * independent study of Computer Science
- *
- */
+
 public class Client {
 		private static String ip = "127.0.0.1";
 		private static Socket socket;
 		private static File file;
 		private static int bytesRead;
 	    private static int current;
-	    // private static FileOutputStream fos = null;
-	    // private static BufferedOutputStream bos = null;
-	    // private static InputStream is = null;
 		private static DataInputStream in;
 		private static DataOutputStream out;
 		private static String[] filelist;
@@ -49,14 +52,15 @@ public class Client {
 		private static JPanel panel = new JPanel();
 		private static JPanel buttonPanel = new JPanel();
 		private static JFrame frame = new JFrame("Java File Transfer Client");
-		private final static String FILE_TO_RECEIVED_ORG = "/Users/orimiller/TEMP1/";
-		public static String FILE_TO_RECEIVED = "/Users/orimiller/TEMP1/";
+		private static JFileChooser chooser = new JFileChooser();
+		public static String FILE_TO_RECEIVED = "/Users/orimiller/TEMP1";
 		
 	public Client() throws UnknownHostException, IOException{
 		try{
 		socket = new Socket(ip,2525);
 	    in = new DataInputStream(socket.getInputStream());
 	    out = new DataOutputStream(socket.getOutputStream());
+	    chooser.setCurrentDirectory(new File(System.getProperty("user.home")));
 	    GridLayout layout = new GridLayout(2,1,10,10);
 	    GridLayout layout2 = new GridLayout(1,2,10,10);
 	    GridLayout layout3 = new GridLayout(1,3,10,10);
@@ -76,6 +80,7 @@ public class Client {
 		refresh.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent e) {
 				updateList();
+				System.out.println(FILE_TO_RECEIVED);
 			}
 		});
 		download.addActionListener(new ActionListener(){
@@ -83,31 +88,35 @@ public class Client {
 				try{
 					int get = list.getSelectedIndex();
 					if(get != -1 && (list.getSelectedValue().endsWith("(1)"))){
-						 download(get);
+						//int result = chooser.showOpenDialog(frame);
+						
+						download(get);
 					} else if(get != -1){
 						out.writeUTF("SEND");
 						out.writeInt(get);
-						FILE_TO_RECEIVED += list.getSelectedValue().substring(0,(list.getSelectedValue().length()-3)) + "/";
-						file = new File(FILE_TO_RECEIVED);
-						if(!file.exists()){
-							file.mkdir();
-							updateList();
-						}
+						//FILE_TO_RECEIVED += list.getSelectedValue().substring(0,(list.getSelectedValue().length()-3)) + "/";
+						//file = new File(FILE_TO_RECEIVED);
+						//if(!file.exists()){
+							//file.mkdir();
+							//updateList();
+						//}
+						updateList();
 					}
 				} catch(Exception e1){
 					e1.printStackTrace();
 				}
+				System.out.println(FILE_TO_RECEIVED);
 			}
 		});
 		home.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent e) {
 					try {
 						out.writeUTF("HOME");
-						FILE_TO_RECEIVED = FILE_TO_RECEIVED_ORG;
 						updateList();
 					} catch (IOException e1) {
 						e1.printStackTrace();
-					}		
+					}
+					System.out.println(FILE_TO_RECEIVED);
 			}
 		});
 		WindowListener exitListener = new WindowAdapter() {
@@ -118,6 +127,7 @@ public class Client {
 		        } catch(Exception e1){
 		        	
 		        }
+		       
 		    } 
 		};
 		frame.addWindowListener(exitListener);
@@ -145,6 +155,7 @@ public class Client {
 	    InputStream is = socket.getInputStream();
 	    FileOutputStream fos = new FileOutputStream(temp);
 	    BufferedOutputStream bos = new BufferedOutputStream(fos);
+	    float time1 = (float)System.currentTimeMillis();
 	    bytesRead = is.read(mybytearray,0,mybytearray.length);
 	    current = bytesRead;
 	    if(current < mybytearray.length){
@@ -155,7 +166,12 @@ public class Client {
 			    }
 			    System.out.println(current);
 		    } while(bytesRead > 0); 
-	    } 
+	    }
+	    float time2 = (float)System.currentTimeMillis();
+	    float Speed = (float)((float)(current/1000000.0) / (float)((time2/time1)/1000.0));
+	    System.out.println("Time = " + ((time2/time1)/1000.0));
+	    System.out.println("Total Megabytes = " + (current/1000000.0));
+	    System.out.println("Speed = " + Speed  + " MB/sec");
 	    bos.write(mybytearray, 0 , current);
 	    bos.flush();
 	    System.out.println("File " + temp + " downloaded (" + current + " bytes read)");
