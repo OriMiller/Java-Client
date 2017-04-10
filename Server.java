@@ -1,5 +1,5 @@
 /**
- * @author orimiller
+d * @author orimiller
  * This is a Java Client/Server Socket-based file download program 
  * developed by Ori Miller for his 11th grade (Junior) year 
  * independent study of Computer Science
@@ -18,39 +18,25 @@ import java.net.Socket;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Scanner;
 
 public class Server {
-	public static String homeFile = "/Users/orimiller"; //Default directory
+	public static String homeFile = "/Users/omiller/";
 	public static ArrayList<Handler> connecties = new ArrayList<Handler>();
+	private static ServerSocket server;
 	public static void main(final String[] args) throws Exception 
 	{
+		
 		System.out.println("Server Startup");
-		System.out.println("Please type the home directory");
-		try(Scanner scan = new Scanner(System.in))
-		{
-			 String sysin = scan.nextLine().toLowerCase();
-			 if(new File(sysin).isDirectory())
-			 {
-				 System.out.println("Server is Running at Directory " + homeFile);
-				 homeFile = sysin;
-			 }
+		//System.out.println("Please type the home directory");
+		System.out.println("Server is Running at Directory " + homeFile);
+		System.out.println(new File(homeFile).getAbsolutePath());
+		server = new ServerSocket(2525); //Creation of ServerSocket
+		//ThreadGroup group = new ThreadGroup("Connections"); //Creation of ThreadGroup that houses all of the individual Threads for each individual connection
+		while(true) {
+			new Handler(server.accept()); //Creates unnamed Handler with the accepted socket connection to client and adds it to the ThreadGroup
+			//group.list();
 		}
-		ServerSocket server = new ServerSocket(2525); //Creation of ServerSocket
-		ThreadGroup group = new ThreadGroup("Connections"); //Creation of ThreadGroup that houses all of the individual Threads for each individual connection
-		try
-		{
-			while(true)
-			{
-				new Handler(server.accept(),group); //Creates unnamed Handler with the accepted socket connection to client and adds it to the ThreadGroup
-				group.list();
-			}
-		} 
-		finally 
-		{
-			server.close();
-		}
-	}
+	} 
 }
 
 class Handler extends Thread
@@ -59,9 +45,9 @@ class Handler extends Thread
 	private static Socket socket; //Socket connected to client
 	private static DataInputStream in;
 	private static DataOutputStream out;
-	Handler(Socket socket, ThreadGroup group) throws IOException
+	Handler(Socket socket) throws IOException
 	{
-		super(group, (String)socket.getInetAddress().toString());
+		//super((String)socket.getInetAddress().toString());
 		Handler.socket = socket;
 		in = new DataInputStream(socket.getInputStream());
 		out = new DataOutputStream(socket.getOutputStream());
