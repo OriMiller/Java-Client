@@ -3,7 +3,6 @@ d * @author orimiller
  * This is a Java Client/Server Socket-based file download program 
  * developed by Ori Miller for his 11th grade (Junior) year 
  * independent study of Computer Science
- *
  */
 import java.io.BufferedInputStream;
 import java.io.DataInputStream;
@@ -12,25 +11,29 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-
-import java.net.ServerSocket;
-import java.net.Socket;
+import java.net.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 
 public class Server {
-	public static String homeFile = "/Users/omiller/";
+	public static String homeFile = "/";
 	public static ArrayList<Handler> connecties = new ArrayList<Handler>();
 	private static ServerSocket server;
 	public static void main(final String[] args) throws Exception 
 	{
-		
+		//System.out.println(InetAddress.getLocalHost());
 		System.out.println("Server Startup");
+		server = new ServerSocket(2525); //Creation of ServerSocket
+		
+		//DatagramSocket s = new DatagramSocket(8888);
+		  
+		
+		System.out.println("Connect to this server with: " + InetAddress.getLocalHost());
 		//System.out.println("Please type the home directory");
 		System.out.println("Server is Running at Directory " + homeFile);
 		System.out.println(new File(homeFile).getAbsolutePath());
-		server = new ServerSocket(2525); //Creation of ServerSocket
+		
 		//ThreadGroup group = new ThreadGroup("Connections"); //Creation of ThreadGroup that houses all of the individual Threads for each individual connection
 		while(true) {
 			new Handler(server.accept()); //Creates unnamed Handler with the accepted socket connection to client and adds it to the ThreadGroup
@@ -55,7 +58,7 @@ class Handler extends Thread
 	}
 	public static void getList(File file) throws IOException
 	{
-		if(file.exists())
+		if(file.exists() && file.canRead())
 		{
 			ArrayList<String> strs = new ArrayList<String>();
 			System.out.println(Arrays.toString(file.list()));
@@ -80,6 +83,7 @@ class Handler extends Thread
 	public static void downloadFile(int fileIndex) throws IOException
 	{
 		File myFile = new File(file.listFiles()[fileIndex].getPath());
+		if(myFile.canRead()){
 		byte [] mybytearray  = new byte [(int)myFile.length()];
 		out.writeInt(mybytearray.length);
 		FileInputStream fis = new FileInputStream(myFile);
@@ -92,6 +96,9 @@ class Handler extends Thread
         System.out.println("Done.");
         myFile = new File(Server.homeFile);
         bis.close();
+        } else {
+        	System.out.println("ACCESS DENIED");
+        }
 	}
 	public void run()
 	{
