@@ -19,13 +19,8 @@ import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 
 import java.net.ConnectException;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
-import java.net.MulticastSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
 
@@ -35,35 +30,35 @@ import javax.swing.JFrame;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
 
-import com.sun.xml.internal.ws.encoding.MtomCodec.ByteArrayBuffer;
-
 public class Client {
-		private static String ip = "";
-		private static Socket socket;
-		//private static File file;
-		private static int bytesRead;
-	    private static int current;
-		private static DataInputStream in;
-		private static DataOutputStream out;
-		private static String[] filelist;
-		private static JButton refresh = new JButton("Refresh");
-		private static JButton download = new JButton("Download");
-		private static JButton home = new JButton("Home");
-		private static JList<String> list = new JList<String>();
-		private static JScrollPane sPane = new JScrollPane();
-		private static JPanel panel = new JPanel();
-		private static JPanel buttonPanel = new JPanel();
+		private String ip;
+		private Socket socket;
+		private int bytesRead;
+		private int current;
+		private DataInputStream in;
+		private DataOutputStream out;
+		private String[] filelist;
+		private JButton refresh = new JButton("Refresh");
+		private JButton download = new JButton("Download");
+		private JButton home = new JButton("Home");
+		private JList<String> list = new JList<String>();
+		private JScrollPane sPane = new JScrollPane();
+		private JPanel panel = new JPanel();
+		private JPanel buttonPanel = new JPanel();
 		private static JFrame frame = new JFrame("Java File Transfer Client");
-		private static JFileChooser chooser = new JFileChooser();
-		private static JProgressBar bar = new JProgressBar();
-		public static String FILE_TO_RECEIVED = "/Users/omiller/Desktop";
+		private JFileChooser chooser = new JFileChooser();
+		private String FILE_TO_RECEIVED;
 		
-	public Client() throws UnknownHostException, IOException{
+	    public Client() throws UnknownHostException, IOException{
 		try{
-		socket = new Socket("0.0.0.0",2525);
+		new JOptionPane();
+		ip = JOptionPane.showInputDialog("Please Enter IP Address of Server");
+		if(ip.equals(null)){
+			System.exit(0);
+		}
+		socket = new Socket(ip,2525);
 	    in = new DataInputStream(socket.getInputStream());
 	    out = new DataOutputStream(socket.getOutputStream());
 	    chooser.setCurrentDirectory(new File(System.getProperty("user.home")));
@@ -80,16 +75,18 @@ public class Client {
 		buttonPanel.add(refresh);
 		buttonPanel.add(home);
 		buttonPanel.add(download);
-		//panel.add(bar);
 		Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
 		int height = (int)screenSize.getHeight()/2;
 		int width = (int)screenSize.getWidth()/2;
 		frame.setSize(width, height);
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		frame.setVisible(true);
 		updateList();
-		//new JOptionPane().createDialog(frame, "Error");
+		new JOptionPane().createDialog(frame, "Error");
 		
 		refresh.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent e) {
+				
 				updateList();
 				System.out.println(FILE_TO_RECEIVED);
 			}
@@ -99,7 +96,6 @@ public class Client {
 				try{
 					int get = list.getSelectedIndex();
 					if(get != -1 && (list.getSelectedValue().endsWith("(1)"))){
-						//int result = chooser.showOpenDialog(frame);
 						chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
 						int chooseResponse = chooser.showOpenDialog(frame);
 						if(chooseResponse == JFileChooser.APPROVE_OPTION){
@@ -109,15 +105,9 @@ public class Client {
 							new JOptionPane().createDialog(frame, "Error");
 						}
 					} else if(get != -1){
-						out.writeUTF("SEND");
-						out.writeInt(get);
-						System.out.println();
-						//FILE_TO_RECEIVED += list.getSelectedValue().substring(0,(list.getSelectedValue().length()-3)) + "/";
-						//file = new File(FILE_TO_RECEIVED);
-						//if(!file.exists()){
-							//file.mkdir();
-							//updateList();
-						//}
+						out.writeInt(2);
+						out.write(get);
+						System.out.println(get);
 						updateList();
 					}
 				} catch(Exception e1){
@@ -129,7 +119,7 @@ public class Client {
 		home.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent e) {
 					try {
-						out.writeUTF("HOME");
+						out.writeInt(3);
 						updateList();
 					} catch (IOException e1) {
 						e1.printStackTrace();
@@ -141,11 +131,10 @@ public class Client {
 		    @Override
 		    public void windowClosing(WindowEvent e) {
 		        try{
-		        	out.writeUTF("CLOSING");
+		        	out.writeInt(4);
 		        } catch(Exception e1){
 		        	
 		        }
-		       
 		    } 
 		};
 		frame.addWindowListener(exitListener);
@@ -158,58 +147,50 @@ public class Client {
 	private void run() throws Exception{
 		while(true){
 			Thread.sleep(100);
+			
 		}
     }
-	private static void download(int selectedValue) throws IOException{
+	private void download(int selectedValue) throws IOException{
 		String temp = FILE_TO_RECEIVED + "/" + list.getSelectedValue().substring(0,(list.getSelectedValue().length()-3));
 		if(!(new File(temp).exists())){
 		current = 0;
-		out.writeUTF("SEND");
+		out.writeInt(2);
 		out.writeInt(selectedValue);
 		int gets = in.readInt();
+		System.out.println(gets);
 		System.out.println(temp);
 		new File(temp).createNewFile(); //creates an empty file with the name of the selected file
-	    byte [] mybytearray  = new byte [gets]; //creates empty byte array with the size sent from the server
-	    //bar.setMaximum(gets);
-	    //bar.setMinimum(0);
-	    InputStream is = socket.getInputStream();
-	    FileOutputStream fos = new FileOutputStream(temp);
-	    BufferedOutputStream bos = new BufferedOutputStream(fos);
-	    //float time1 = (float)System.nanoTime();
-	    bytesRead = is.read(mybytearray,0,mybytearray.length);
+	    byte[] mybytearray  = new byte[gets]; //creates empty byte array with the size sent from the server
+	    BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(temp));
+	    bytesRead = in.read(mybytearray,0,mybytearray.length);
 	    current = bytesRead;
 	    if(current < mybytearray.length){
 		    do{
-		    	
-			    bar.setStringPainted(true);
-			    bytesRead = is.read(mybytearray, current, mybytearray.length - current);
+			    bytesRead = in.read(mybytearray, current, mybytearray.length - current);
 			    if(bytesRead > 0){
-			    current += bytesRead;
-			    //bar.setValue(current);
+			    	current += bytesRead;
 			    }
-			    
-			    System.out.println(current);
-			    
+			    	System.out.println(current);
 			    } while(bytesRead > 0); 
 	    }
-	    //float time2 = (float)System.nanoTime();
-	    //float Speed = (float)((float)(current/1000.0) / (float)((time2/time1)/1000.0));
-	    //System.out.println("Time = " + ((time2/time1)/1000.0));
-	    System.out.println("Total Megabytes = " + (current/1000000.0));
-	    //System.out.println("Speed = " + Speed  + " MB/sec");
+	    System.out.println("total bytes = " + current);
 	    bos.write(mybytearray, 0 , current);
 	    bos.flush();
-	    fos.flush();
 	    bos.close();
-	    fos.close();
 	    System.out.println("File " + temp + " downloaded (" + current + " bytes read)");
 		}
-		System.gc();
+		
+		
+		
+		
 	}
-	private static void updateList(){
+	private void updateList(){
 		try {
-			out.writeUTF("REFRESH");
+			System.out.println("REFRESH");
+			out.writeInt(1);
+			System.out.println("REFRESH-1");
 	        int e = in.readInt();
+	        System.out.println(e);
 	        byte[] byteA = new byte[e]; 
 	        in.read(byteA);
 	        filelist = (String[]) Serializer.deserialize(byteA);
@@ -221,10 +202,7 @@ public class Client {
 	public static void main(String[] args) throws Exception {
 		try{
 			Client client = new Client();
-			frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-			frame.setVisible(true);
 			client.run();
-			out.writeUTF("CLOSING");
 		} catch (Exception e){
 			e.printStackTrace();
 		}
